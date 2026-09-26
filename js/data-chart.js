@@ -65,16 +65,17 @@
         return candles;
     }
 
-    // ---- theme-aware chart colors ----
+    // ---- theme-aware chart colors (green = up, red = down) ----
     function chartColors() {
         var dark = document.documentElement.classList.contains("ta-dark");
         return {
-            labelFontColor: dark ? "#9aa0b5" : "#8a8a9d",
-            tooltipBg: dark ? "#2a2a3d" : "#ffffff",
-            tooltipFont: dark ? "#e8e8f0" : "rgba(0,0,0,0.8)",
-            upColor: "#28a745",
-            downColor: "#dc3545",
-            maColor: dark ? "#f7b32b" : "#e8960c",
+            labelFontColor: dark ? "#9a9a9a" : "#8a8a8a",
+            tooltipBg: dark ? "#161616" : "#ffffff",
+            tooltipFont: dark ? "#f0f0f0" : "rgba(0,0,0,0.85)",
+            upColor: dark ? "#00e07a" : "#00b25c",
+            downColor: dark ? "#ff4757" : "#e0344a",
+            maColor: dark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.55)",
+            volumeColor: dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.14)",
             gridColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
             crosshair: dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.18)"
         };
@@ -110,7 +111,7 @@
         return "<strong>" + MARKETS[state.asset].symbol + "</strong> · " + date +
             "<br/>Open: " + fmt(y[0]) + "&nbsp; High: " + fmt(y[1]) +
             "<br/>Low: " + fmt(y[2]) + "&nbsp; Close: <strong>" + fmt(y[3]) + "</strong>" +
-            "<br/>Change: <span style='color:" + (chg >= 0 ? "#28a745" : "#dc3545") + "'>" +
+            "<br/>Change: <span style='color:" + (chg >= 0 ? "#00b25c" : "#e0344a") + "'>" +
             (chg >= 0 ? "+" : "") + chg.toFixed(2) + "%</span>";
     }
 
@@ -179,7 +180,7 @@
                     axisYType: "secondary",
                     axisYSuffix: "",
                     labelFormatter: function () { return ""; },
-                    color: c.gridColor,
+                    color: c.volumeColor,
                     toolTipContent: null,
                     dataPoints: candles.map(function (cd) {
                         return { x: cd.x, y: cd.v || 0 };
@@ -221,7 +222,7 @@
         $("#balance_arrow")
             .removeClass("fa-caret-up fa-caret-down")
             .addClass(up ? "fa-caret-up" : "fa-caret-down")
-            .css("color", up ? "var(--app-primary-color)" : "#dc3545");
+            .css("color", up ? "var(--app-primary-color)" : "var(--app-red)");
 
         $("#data_source_badge")
             .toggleClass("badge-live", state.live)

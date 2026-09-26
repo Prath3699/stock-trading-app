@@ -75,7 +75,7 @@ $(function () {
             total += usd;
             html +=
                 '<div class="pf_card">' +
-                    '<div class="pf_name"><i class="fa ' + MARKETS[a].icon + '" style="color:' + MARKETS[a].color + '"></i> ' + a + '</div>' +
+                    '<div class="pf_name"><i class="fa ' + MARKETS[a].icon + '" ></i> ' + a + '</div>' +
                     '<div class="pf_amt">' + holdings[a].toLocaleString("en-US", { maximumFractionDigits: 3 }) + '</div>' +
                     '<div class="pf_usd">' + fmtUsd(usd) + '</div>' +
                 '</div>';
