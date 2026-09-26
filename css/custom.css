@@ -8,7 +8,6 @@
 body
 {
   font-family: 'Poppins', sans-serif;
-  overflow: hidden;
   background: #313131;/*#2196f3;*/
 }
 
@@ -21,32 +20,15 @@ body
 
 #ta_app
 {
-  position: fixed;
-  left: 50%;
-  top: 3vh;
-  transform: translateX(-50%);
+  position: relative;
+  margin: 0 auto;
   width: 380px;
-  max-height: 94vh;
   padding: 0 22px;
   padding-bottom: 20px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   background-color: var(--app-bg-color);
   border-radius: 15px;
   box-shadow: 0 0 0 0.5px rgba(255,255,255,0.3),
               60px 70px 40px -55px rgba(0,0,0,0.5);
-}
-@media only screen and (max-width: 600px) {
-  #ta_app {
-    width: 100%;
-    max-width: 100%;
-    left: 0;
-    top: 0;
-    transform: none;
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
-  }
 }
         
 
@@ -241,35 +223,46 @@ div.transactions_list .amount_sent
    timeframe pills, dark mode, toast, button polish
    ========================================================= */
 
-html, body { height: 100%; }
+html { height: 100%; }
 
 body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 100%;
   overflow-x: hidden;
   transition: background-color 0.3s ease;
 }
 
-/* Replace fragile right:% positioning with flex centering */
+/* Robust centering that never clips tall content:
+   page scrolls naturally on desktop; panel scrolls in-page on mobile. */
 #ta_app {
   position: relative;
+  left: auto;
   right: auto;
-  top: 0;
-  margin: 20px auto;
-  max-height: 95vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
+  top: auto;
+  transform: none;
+  margin: 24px auto;
+  width: 380px;
+  max-width: calc(100% - 24px);
+  max-height: none;
+  overflow: visible;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
-#ta_app::-webkit-scrollbar { width: 4px; }
-#ta_app::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
 
 @media only screen and (max-width: 600px) {
-  #ta_app { right: auto; margin-top: 0; height: 100vh; max-height: 100vh; width: 100%; border-radius: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  #ta_app {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0;
+    scrollbar-width: thin;
+  }
+  #ta_app::-webkit-scrollbar { width: 4px; }
+  #ta_app::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
 }
-@media only screen and (min-width: 601px) and (max-width: 550px) { #ta_app { right: auto; } }
 
 /* ---------- Timeframe selector ---------- */
 .chart_timeframes {

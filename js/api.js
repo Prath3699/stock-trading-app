@@ -45,7 +45,14 @@ async function fetchOHLC(assetId, days) {
 /** Current spot price + 24h change (%). */
 async function fetchSpot(assetId) {
   const url = `https://api.coingecko.com/api/v3/simple/price?ids=${assetId}&vs_currencies=usd&include_24hr_change=true`;
-  const j = await fetchWithTimeout(url);
+  let j;
+  try {
+    j = await fetchWithTimeout(url);
+  } catch (e) {
+    // CORS / network blocked — try a public read-only CORS proxy
+    const prox = "https://corsproxy.io/?url=" + encodeURIComponent(url);
+    j = await fetchWithTimeout(prox);
+  }
   const d = j[assetId];
   if (!d) throw new Error("no spot data");
   return { price: d.usd, change24h: d.usd_24h_change };
