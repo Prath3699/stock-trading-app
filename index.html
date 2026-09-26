@@ -2,8 +2,14 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-        <title>Trading App - UI Design</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>CryptoTrade — Live Trading Dashboard</title>
+        <meta name="description" content="Live crypto trading dashboard with real-time CoinGecko price data, candlestick charts and portfolio tracking.">
+        <meta property="og:title" content="CryptoTrade — Live Trading Dashboard">
+        <meta property="og:description" content="Real-time BTC/ETH/SOL/DOGE candlestick charts powered by CoinGecko.">
+        <meta property="og:type" content="website">
+        <meta name="theme-color" content="#3d30bb">
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,13 +27,13 @@
                 <div class="col-12 d-flex justify-content-between align-items-center">
                     <div>
                         <div class="name">
-                            Your Balance
+                            <span id="balance_symbol">BTC/USD</span> Price
                         </div>
                         <div class="caption">
-                            <span id="balance_btc">9.086 BTC</span>
+                            <span id="balance_price" class="price-big">$42,000</span>
                             <i id="balance_arrow" class="fa fa-caret-up text-success mr-1 ml-2"></i>
-                            <span id="balance_change">
-                                7.62% (+$900)
+                            <span id="balance_change" class="text-success">
+                                +7.62% (+$900)
                             </span>
                         </div>
                     </div>
@@ -39,10 +45,23 @@
             </section>
             <!-- End Section Header -->
 
+            <!-- Start Section Asset Switcher -->
+            <section id="ta_assets" class="row">
+                <div class="col-12 px-0 d-flex asset-bar" role="tablist" aria-label="Select asset">
+                    <button type="button" class="btn asset_btn active" data-asset="BTC" role="tab" aria-selected="true"><i class="fa fa-bitcoin"></i> BTC</button>
+                    <button type="button" class="btn asset_btn" data-asset="ETH" role="tab" aria-selected="false"><i class="fa fa-ethereum"></i> ETH</button>
+                    <button type="button" class="btn asset_btn" data-asset="SOL" role="tab" aria-selected="false"><i class="fa fa-bolt"></i> SOL</button>
+                    <button type="button" class="btn asset_btn" data-asset="DOGE" role="tab" aria-selected="false"><i class="fa fa-coins"></i> DOGE</button>
+                    <span id="data_source_badge" class="badge badge-demo" aria-live="polite"><i class="fa fa-flask"></i> DEMO</span>
+                </div>
+            </section>
+            <!-- End Section Asset Switcher -->
+
             <!-- Start Section Chart -->
             <section id="ta_body_chart" class="row">
 
-                <div class="col-12 px-0">
+                <div class="col-12 d-flex justify-content-between align-items-center chart_head_row px-0">
+                    <div class="chart_title" id="chart_title">Bitcoin · BTC/USD</div>
                     <div class="chart_timeframes btn-group" role="group" aria-label="Chart timeframe">
                         <button type="button" class="btn tf_btn" data-days="30">1M</button>
                         <button type="button" class="btn tf_btn" data-days="90">3M</button>
@@ -62,18 +81,29 @@
             <section id="ta_action_btns" class="row">
 
                 <div class="col-6 text-center pr-2">
-                    <button class="btn ta_btn_buy w-100">
+                    <button class="btn ta_btn_buy w-100" data-side="buy">
                         <i class="fa fa-long-arrow-down"></i> BUY
                     </button>
                 </div>
                 <div class="col-6 text-center pl-2">
-                    <button class="btn ta_btn_sell bg-danger w-100">
+                    <button class="btn ta_btn_sell bg-danger w-100" data-side="sell">
                         <i class="fa fa-long-arrow-up"></i> SELL
                     </button>
                 </div>
 
             </section>
             <!-- End Section Action Buttons -->
+
+            <!-- Start Section Portfolio -->
+            <section id="ta_portfolio" class="row">
+                <div class="col-12 px-0">
+                    <div class="body_title text-left">Portfolio</div>
+                    <div class="d-flex portfolio_row" id="portfolio_list">
+                        <!-- rendered by js/custom.js -->
+                    </div>
+                </div>
+            </section>
+            <!-- End Section Portfolio -->
 
             <!-- Start Section Transactions -->
             <section id="ta_body_transactions" class="row">
@@ -99,6 +129,7 @@
 
         <script src="js/jquery.min.js" type="text/javascript"></script>
         <script src="js/canvasjs.min.js" type="text/javascript"></script>
+        <script src="js/api.js" type="text/javascript"></script>
         <script src="js/data-chart.js" type="text/javascript"></script>
         <script src="js/custom.js" type="text/javascript"></script>
     </body>
