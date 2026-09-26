@@ -103,19 +103,32 @@ $(function () {
         var asset = ($(".asset_btn.active").data("asset")) || "BTC";
         var qty = TRADE_SIZE[asset] || 0.01;
 
+        if (side === "sell" && (holdings[asset] || 0) < qty) {
+            showToast("Not enough " + asset + " to sell this amount", false);
+            return;
+        }
+
         holdings[asset] = (holdings[asset] || 0) + (side === "buy" ? qty : -qty);
         if (holdings[asset] < 0) holdings[asset] = 0;
         saveHoldings();
 
+        // record the trade so it appears in Recent Transactions
+        var price = window.taCurrentPrice ? window.taCurrentPrice() : 0;
+        if (window.taRecordTrade) window.taRecordTrade(side, asset, qty, price);
+
         showToast(
             (side === "buy" ? "Bought " : "Sold ") + qty + " " + asset +
-            " — order filled at market",
+            " at " + (price ? "$" + price.toLocaleString("en-US", { maximumFractionDigits: 2 }) : "market"),
             true
         );
         renderPortfolio();
+        if (window.taRefreshTransactions) window.taRefreshTransactions();
     });
 
     $(".view_all").on("click", function () {
-        showToast("Showing all transactions", true);
+        var $list = $("#transactions_list");
+        var expanded = $list.toggleClass("txn-expanded").hasClass("txn-expanded");
+        $(this).html(expanded ? 'View less <i class="fa fa-angle-up"></i>'
+                             : 'View all <i class="fa fa-angle-down"></i>');
     });
 });

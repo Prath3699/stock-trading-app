@@ -449,3 +449,9 @@ html.ta-dark div.transactions_list .transactions_thumb i {
 .pf_card.pf_total .pf_name,
 .pf_card.pf_total .pf_usd { color: rgba(255,255,255,.75); }
 .pf_card.pf_total .pf_amt { color: #fff; }
+
+/* Transactions list: collapsed shows 4 rows; View all expands */
+div.transactions_list:not(.txn-expanded) .txn-row:nth-child(n+5) { display: none; }
+.view_all i { margin-left: 2px; }
+.txn-row { animation: txnIn .25s ease; }
+@keyframes txnIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }

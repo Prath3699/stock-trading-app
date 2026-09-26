@@ -16,7 +16,8 @@
         candles: [],       // [{x: Date, y:[o,h,l,c], v: relVolume}]
         live: false,       // true when using real API data
         spot: null,        // latest spot price info
-        chart: null
+        chart: null,
+        fetchSeq: 0        // guards against out-of-order async responses
     };
 
     // ---- deterministic PRNG so the demo looks the same on reload ----
@@ -230,15 +231,65 @@
                 : '<i class="fa fa-flask"></i> DEMO');
     }
 
-    // ---- recent transactions rendered from data ----
+    // ---- recent transactions: seeded history + real trades from localStorage ----
+    var TRADES_KEY = "ta-trades";
+
+    function loadTrades() {
+        try { return JSON.parse(localStorage.getItem(TRADES_KEY)) || []; }
+        catch (e) { return []; }
+    }
+
+    window.taRecordTrade = function (side, asset, qty, price) {
+        var trades = loadTrades();
+        trades.unshift({
+            side: side, asset: asset, qty: qty, price: price,
+            usd: qty * price, ts: Date.now()
+        });
+        if (trades.length > 50) trades.length = 50;
+        try { localStorage.setItem(TRADES_KEY, JSON.stringify(trades)); } catch (e) {}
+    };
+
+    function timeAgo(ts) {
+        var s = Math.floor((Date.now() - ts) / 1000);
+        if (s < 60) return "Just now";
+        if (s < 3600) return Math.floor(s / 60) + " min ago";
+        if (s < 86400) return Math.floor(s / 3600) + " h ago";
+        var d = new Date(ts);
+        return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
+               " " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function currentPriceNum() {
+        var last = state.candles[state.candles.length - 1];
+        return state.spot ? state.spot.price : (last ? last.y[3] : 0);
+    }
+
     function renderTransactions() {
         var sym = state.asset;
-        var txns = [
+        var txns = [];
+
+        // real user trades for the selected asset
+        loadTrades().forEach(function (t) {
+            if (t.asset !== sym) return;
+            txns.push({
+                type: t.side === "buy" ? "buy" : "out",
+                title: (t.side === "buy" ? "Buy " : "Sell ") + sym,
+                amount: t.side === "buy"
+                    ? "- " + fmt(t.usd)
+                    : "+ " + fmt(t.usd),
+                ago: timeAgo(t.ts),
+                real: true
+            });
+        });
+
+        // seeded demo history to fill the list
+        var demo = [
             { type: "in",  title: "Received", amount: "+ 0.085 " + sym, ago: "Today 01:55 PM" },
             { type: "out", title: "Sent",     amount: "- 0.032 " + sym, ago: "Today 03:14 PM" },
             { type: "buy", title: "Buy " + sym, amount: "$43,120.00",   ago: "Yesterday 09:02 AM" },
             { type: "in",  title: "Received", amount: "+ 1.065 " + sym, ago: "Sep 24, 2026 05:38 PM" }
         ];
+        txns = txns.concat(demo);
 
         var html = "";
         $.each(txns, function (_, t) {
@@ -273,9 +324,12 @@
     }
 
     async function loadLive(daysForOHLC) {
-        var id = MARKETS[state.asset].id;
+        var seq = ++state.fetchSeq;
+        var assetAtRequest = state.asset;
+        var id = MARKETS[assetAtRequest].id;
         try {
             var candlesRaw = await fetchOHLC(id, daysForOHLC || 365);
+            if (seq !== state.fetchSeq) return false;   // superseded by a newer request
             var spot = await fetchSpot(id).catch(function () { return null; });
 
             var candles = candlesRaw.map(function (cd) {
@@ -286,6 +340,7 @@
             // attach normalized volume buckets if available
             try {
                 var vols = await fetchVolume(id, Math.min(30, Math.ceil(state.days / 30) * 30 || 30));
+                if (seq !== state.fetchSeq) return false;
                 var byDay = {};
                 vols.forEach(function (p) { byDay[Math.floor(p[0] / DAY_MS)] = p[1]; });
                 var maxV = 1;
@@ -320,8 +375,9 @@
 
             if (state.live) {
                 try {
-                    state.spot = await fetchSpot(MARKETS[state.asset].id);
-                    var p = state.spot.price;
+                    var spot = await fetchSpot(MARKETS[state.asset].id);
+                    var p = spot.price;
+                    state.spot = spot;
                     last.y[3] = p;
                     last.y[1] = Math.max(last.y[1], p);
                     last.y[2] = Math.min(last.y[2], p);
@@ -340,35 +396,51 @@
                 state.chart.render();
             }
             updateBalance();
-        }, 4000);
+        }, 8000);   // conservative interval to avoid CoinGecko rate limits
     }
 
-    // ---- boot ----
-    $(async function () {
-        loadSimulated();          // instant paint, no blank screen
-        startLiveTick();
-
-        var ok = await loadLive(365);
-        if (!ok) console.info("Live API unavailable — running in demo mode.");
-
+    // ---- boot: bind UI handlers IMMEDIATELY (never wait on async fetches) ----
+    function bindUI() {
         // timeframe pills
         $(".tf_btn").on("click", function () {
             $(".tf_btn").removeClass("active");
             $(this).addClass("active");
             state.days = TF_DAYS[$(this).data("days")] || 365;
             renderChart();
+            updateBalance();
         });
 
         // asset switcher
-        $(".asset_btn").on("click", async function () {
-            $(".asset_btn").removeClass("active");
-            $(this).addClass("active");
+        $(".asset_btn").on("click", function () {
+            if ($(this).hasClass("active")) return;
+            $(".asset_btn").removeClass("active").attr("aria-selected", "false");
+            $(this).addClass("active").attr("aria-selected", "true");
             state.asset = $(this).data("asset");
             $("#chart_title").text(MARKETS[state.asset].name + " · " + MARKETS[state.asset].symbol);
             loadSimulated();      // immediate feedback while fetching
-            await loadLive(365);
+            loadLive(365).then(function (ok) {
+                if (!ok && window.taShowToast) {
+                    taShowToast(MARKETS[state.asset].name + " loaded in demo mode (API unavailable)", true);
+                }
+            });
         });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () { bindUI(); startLiveTick(); });
+    } else {
+        bindUI();
+        startLiveTick();
+    }
+
+    loadSimulated();          // instant paint, no blank screen
+    loadLive(365).then(function (ok) {
+        if (!ok) console.info("Live API unavailable — running in demo mode.");
     });
+
+    // expose for custom.js: current price + re-render transaction list after trades
+    window.taCurrentPrice = currentPriceNum;
+    window.taRefreshTransactions = renderTransactions;
 
     // re-render chart when theme flips (exposed for custom.js)
     window.taRefreshChartTheme = renderChart;
