@@ -728,3 +728,32 @@ html.ta-dark .search_panel { background: #26292c; border: 1px solid rgba(255,255
     .pf_summary { flex-direction: column; }
     .ticket_grid { flex-direction: column; }
 }
+
+/* ===== Candela brand (top-left) ===== */
+.brand_block { min-width: 0; }
+a.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    margin-bottom: 6px;
+}
+a.brand:hover, a.brand:focus { text-decoration: none; }
+.brand_mark {
+    color: var(--app-primary-color);
+    font-size: 18px;
+    line-height: 1;
+}
+.brand_name {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--app-text-dark-color);
+}
+html.ta-dark .brand_name { color: #ffffff; }
+a.brand:hover .brand_name { color: var(--app-primary-color); }
+@media (max-width: 576px) {
+    .brand_name { font-size: 13px; letter-spacing: 2px; }
+    .brand_mark { font-size: 15px; }
+}
