@@ -431,4 +431,18 @@
 
     // re-render chart when theme flips (exposed for custom.js)
     window.taRefreshChartTheme = renderChart;
+
+    // Responsive: CanvasJS keeps its old canvas size after viewport changes
+    // (window resize, phone rotation), so re-render the chart on those events.
+    var _rsTimer = null;
+    function scheduleResize() {
+        clearTimeout(_rsTimer);
+        _rsTimer = setTimeout(renderChart, 200);
+    }
+    window.addEventListener("resize", scheduleResize);
+    if (screen.orientation && screen.orientation.addEventListener) {
+        screen.orientation.addEventListener("change", scheduleResize);
+    } else {
+        window.addEventListener("orientationchange", scheduleResize);
+    }
 })();
