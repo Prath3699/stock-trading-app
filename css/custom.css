@@ -257,6 +257,96 @@ body {
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* =========================================================
+   DESKTOP / LAPTOP LAYOUT (≥992px): real trading-terminal feel
+   Wide two-column workspace instead of a narrow phone card.
+   ========================================================= */
+@media only screen and (min-width: 992px) {
+  body { background: #eef1ef; }
+  html.ta-dark body { background: #050505; }
+
+  #ta_app {
+    width: min(1240px, calc(100% - 48px));
+    padding: 0 32px 36px;
+    margin: 32px auto;
+    border-radius: 20px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 24px 60px -30px rgba(0,0,0,.35);
+  }
+  html.ta-dark #ta_app {
+    box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 24px 60px -30px rgba(0,0,0,.9);
+  }
+
+  /* header scales up */
+  #ta_header { margin-top: 26px; }
+  .price-big { font-size: 34px; }
+  #ta_header div.name { font-size: 15px; text-transform: uppercase; letter-spacing: .6px; }
+  .equity_box .name { font-size: 12px; }
+  .equity_value { font-size: 18px; }
+
+  /* asset bar + tabs share one row visually: roomier chips */
+  .asset_btn { font-size: 13px; padding: 7px 16px; }
+  .tab_btn { font-size: 14px; padding: 10px 16px; }
+
+  /* two-column terminal layout */
+  .chart_layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 26px;
+    align-items: start;
+    margin-top: 8px;
+  }
+  .chart_col { min-width: 0; }
+  #ta_body_chart { margin-top: 0; }
+  #chartContainer { height: 440px !important; }
+  .chart_title { font-size: 15px; }
+  .tf_btn { font-size: 12px !important; padding: 6px 14px !important; }
+
+  /* order ticket becomes a sticky side panel */
+  .ticket_col { position: sticky; top: 24px; }
+  .order_card {
+    background: var(--chip-bg);
+    border: 1px solid var(--app-border, rgba(0,0,0,.08));
+    border-radius: 16px;
+    padding: 16px;
+  }
+  html.ta-dark .order_card { border-color: rgba(255,255,255,.08); }
+  .order_card_head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .order_card_sym { font-size: 13px; font-weight: 600; color: var(--app-text-light-color); }
+  .order_card_price { font-size: 16px; font-weight: 600; color: var(--app-text-dark-color); }
+  #ta_order_ticket { margin-top: 0; }
+  .ot_btn { padding: 9px 0; font-size: 14px; }
+  .ticket_field input { padding: 11px 14px; font-size: 15px; }
+  .pct_btn { padding: 7px 0; font-size: 13px; }
+  .ta_btn_buy, .ta_btn_sell { padding-top: 14px; padding-bottom: 14px; font-size: 15px; }
+
+  /* transactions under the chart get their own card */
+  #ta_body_transactions {
+    margin-top: 18px; padding: 16px;
+    background: var(--chip-bg);
+    border-radius: 16px;
+    border: 1px solid var(--app-border, rgba(0,0,0,.06));
+  }
+  html.ta-dark #ta_body_transactions { border-color: rgba(255,255,255,.06); }
+  div.transactions_list { margin-top: 10px; }
+
+  /* market/orders/portfolio tables breathe on big screens */
+  .mkt_table { font-size: 14px; }
+  .mkt_table td { padding: 12px 10px; }
+  .order_row, .holding_row { font-size: 14px; padding: 13px 6px; }
+  .pf_summary { gap: 14px; }
+  .pf_card { padding: 16px; }
+  .pf_value { font-size: 18px; }
+}
+
+/* tablet tweak: slightly taller chart */
+@media only screen and (min-width: 721px) and (max-width: 991px) {
+  #ta_app { width: min(680px, calc(100% - 32px)); }
+  #chartContainer { height: 340px !important; }
+}
+
 /* ---------- Mobile: full-width, naturally scrolling app frame ---------- */
 @media only screen and (max-width: 720px) {
   html, body { height: auto; min-height: 100dvh; overflow-x: hidden; overflow-y: visible; }

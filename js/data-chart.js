@@ -234,6 +234,8 @@
 
         $("#balance_symbol").text(m ? m.symbol : state.asset + "/USD");
         $("#balance_price").text(fmt(close));
+        $("#ticket_symbol").text((m ? m.symbol : state.asset + "/USD") + " · " + state.asset);
+        $("#ticket_price").text(fmt(close));
         $("#balance_change")
             .removeClass("up down")
             .addClass(up ? "up" : "down")
