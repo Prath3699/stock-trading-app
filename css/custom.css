@@ -36,9 +36,6 @@ body
   padding: 0 22px;
   padding-bottom: 20px;
   background-color: var(--app-bg-color);
-  border-radius: 15px;
-  box-shadow: 0 0 0 0.5px rgba(255,255,255,0.3),
-              60px 70px 40px -55px rgba(0,0,0,0.5);
 }
         
 
@@ -249,7 +246,7 @@ body {
   right: auto;
   top: auto;
   transform: none;
-  margin: 24px auto;
+  margin: 0 auto;
   width: 380px;
   max-width: calc(100% - 24px);
   max-height: none;
@@ -265,15 +262,15 @@ body {
   body { background: #2b2e31; }
   html.ta-dark body { background: #1f2224; }
 
+  /* Full-screen edge-to-edge terminal: no width cap, no side gaps */
   #ta_app {
-    width: min(1240px, calc(100% - 48px));
-    padding: 0 32px 36px;
-    margin: 32px auto;
-    border-radius: 20px;
-    box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 24px 60px -30px rgba(0,0,0,.35);
-  }
-  html.ta-dark #ta_app {
-    box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 24px 60px -30px rgba(0,0,0,.9);
+    width: 100%;
+    max-width: none;
+    padding: 0 clamp(16px, 2.5vw, 40px) 40px;
+    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 100dvh;
   }
 
   /* header scales up */
@@ -287,17 +284,17 @@ body {
   .asset_btn { font-size: 13px; padding: 7px 16px; }
   .tab_btn { font-size: 14px; padding: 10px 16px; }
 
-  /* two-column terminal layout */
+  /* two-column terminal layout — stretches to full screen width */
   .chart_layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    gap: 26px;
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 460px);
+    gap: clamp(20px, 2.5vw, 36px);
     align-items: start;
     margin-top: 8px;
   }
   .chart_col { min-width: 0; }
   #ta_body_chart { margin-top: 0; }
-  #chartContainer { height: 440px !important; }
+  #chartContainer { height: clamp(420px, 52vh, 620px) !important; }
   .chart_title { font-size: 15px; }
   .tf_btn { font-size: 12px !important; padding: 6px 14px !important; }
 
@@ -343,7 +340,7 @@ body {
 
 /* tablet tweak: slightly taller chart */
 @media only screen and (min-width: 721px) and (max-width: 991px) {
-  #ta_app { width: min(680px, calc(100% - 32px)); }
+  #ta_app { width: 100%; max-width: none; padding: 0 clamp(16px, 2.5vw, 40px) 32px; }
   #chartContainer { height: 340px !important; }
 }
 
