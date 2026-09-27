@@ -197,10 +197,12 @@
 
     // ================= tabs =================
     function switchTab(name) {
-        $(".tab_btn").removeClass("active");
-        $('.tab_btn[data-tab="' + name + '"]').addClass("active");
+        if (!$("#tab_" + name).length) name = "chart";
+        $(".tab_btn, .tb_btn[data-tab]").removeClass("active");
+        $('.tb_btn[data-tab="' + name + '"], .tab_btn[data-tab="' + name + '"]').addClass("active");
         $(".tab-pane").removeClass("active");
         $("#tab_" + name).addClass("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
         if (name === "portfolio") renderPortfolio();
         if (name === "orders") renderOrders();
         if (name === "market" && window.Market) Market.refresh();
@@ -228,7 +230,19 @@
     $(function () {
         bindTicket();
 
-        $(".tab_btn").on("click", function () { switchTab($(this).data("tab")); });
+        $(".tab_btn, .tb_btn[data-tab]").on("click", function () { switchTab($(this).data("tab")); });
+
+        // Taskbar center Trade button: go to chart tab and focus the order ticket
+        $("#tb_trade_btn").on("click", function () {
+            switchTab("chart");
+            var $ticket = $("#ta_order_ticket");
+            if ($ticket.length) {
+                setTimeout(function () {
+                    $ticket[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    $ticket.find("input[type='number']").first().trigger("focus");
+                }, 150);
+            }
+        });
 
         $("#btn_reset").on("click", function () {
             if (confirm("Reset account to $10,000 paper cash? This clears trades, orders and holdings.")) {

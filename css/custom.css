@@ -626,6 +626,98 @@ html.ta-dark .pill-count { color: #000; }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
 
+/* =========================================================
+   BOTTOM TASKBAR — fixed navigation bar (all screen sizes)
+   Green accent on active tab; center Trade FAB.
+   ========================================================= */
+#taskbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  gap: 4px;
+  height: 62px;
+  padding: 0 8px calc(env(safe-area-inset-bottom, 0px));
+  background: #ffffff;
+  border-top: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 -4px 18px rgba(0,0,0,.07);
+}
+html.ta-dark #taskbar {
+  background: #26292c;
+  border-top-color: rgba(255,255,255,.08);
+  box-shadow: 0 -4px 18px rgba(0,0,0,.45);
+}
+.tb_btn {
+  flex: 1;
+  max-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: .55;
+  font-family: Poppins, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 2px;
+  position: relative;
+  cursor: pointer;
+  transition: opacity .15s ease, transform .15s ease;
+}
+.tb_btn i { font-size: 18px; line-height: 1; }
+.tb_btn:hover { opacity: .85; }
+.tb_btn.active { opacity: 1; color: var(--app-primary-color); }
+html.ta-dark .tb_btn.active { color: #00e07a; }
+.tb_btn.active::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 26px; height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--app-primary-color);
+}
+html.ta-dark .tb_btn.active::before { background: #00e07a; }
+.tb_btn .pill-count {
+  position: absolute;
+  top: 4px; right: calc(50% - 24px);
+  margin-left: 0;
+}
+
+/* Center Trade FAB — raised green circle */
+.tb_btn.tb_trade {
+  flex: 0 0 auto;
+  max-width: 64px;
+}
+.tb_btn.tb_trade i {
+  width: 44px; height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--app-primary-color);
+  color: #fff;
+  font-size: 19px;
+  margin-top: -22px;
+  box-shadow: 0 4px 14px rgba(0,178,92,.45);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+html.ta-dark .tb_btn.tb_trade i { background: #00e07a; color: #000; box-shadow: 0 4px 14px rgba(0,224,122,.35); }
+.tb_btn.tb_trade:hover i { transform: scale(1.07); }
+.tb_btn.tb_trade:active i { transform: scale(.95); }
+
+/* Keep page content clear of the fixed bar */
+body { padding-bottom: 84px; }
+#ta_toast { bottom: 78px; z-index: 1060; }
+@media only screen and (min-width: 992px) {
+  #ta_app { padding-bottom: 90px !important; }
+}
+
 /* ---------- order ticket ---------- */
 #ta_order_ticket { margin-top: 8px; }
 .order_type_bar { display: flex; gap: 6px; margin-bottom: 10px; }
