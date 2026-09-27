@@ -2,6 +2,8 @@
    Trading App – chart engine (live CoinGecko data with
    deterministic simulator fallback), MA(7) overlay, volume
    bars, crosshair tooltips, timeframes and live ticking.
+   Exposes: ChartState, App.priceOf, App.addChartCoin,
+   window.CoinPrices for the limit-order engine.
    ========================================================= */
 
 (function () {
@@ -19,6 +21,17 @@
         chart: null,
         fetchSeq: 0        // guards against out-of-order async responses
     };
+    window.ChartState = state;
+
+    // dynamic coins added from Market tab / search (beyond BTC/ETH/SOL/DOGE)
+    var extraCoins = {};   // symbol -> {id, name}
+    window.CoinPrices = {}; // symbol -> last known price (for limit engine + portfolio)
+
+    function marketInfo(symbol) {
+        if (MARKETS[symbol]) return MARKETS[symbol];
+        var x = extraCoins[symbol];
+        return x ? { id: x.id, symbol: symbol + "/USD", name: x.name || symbol, icon: "fa-dollar", color: "#999" } : null;
+    }
 
     // ---- deterministic PRNG so the demo looks the same on reload ----
     function mulberry32(seed) {
@@ -35,7 +48,9 @@
 
     // ---- generate daily OHLC candles ending "today" (fallback) ----
     function generateCandles(asset, days) {
-        var rand = mulberry32(SEEDS[asset] || 1);
+        var seed = SEEDS[asset];
+        if (seed == null) { seed = 0; for (var i = 0; i < asset.length; i++) seed = (seed * 31 + asset.charCodeAt(i)) | 0; }
+        var rand = mulberry32(seed);
         var candles = [];
         var price = STARTS[asset] || 100;
         var now = new Date();
@@ -108,7 +123,8 @@
         if (!dp) return "";
         var y = dp.y, chg = ((y[3] - y[0]) / y[0] * 100);
         var date = CanvasJS.formatDate(dp.x, "DD MMM YYYY");
-        return "<strong>" + MARKETS[state.asset].symbol + "</strong> · " + date +
+        var m = marketInfo(state.asset);
+        return "<strong>" + (m ? m.symbol : state.asset) + "</strong> · " + date +
             "<br/>Open: " + fmt(y[0]) + "&nbsp; High: " + fmt(y[1]) +
             "<br/>Low: " + fmt(y[2]) + "&nbsp; Close: <strong>" + fmt(y[3]) + "</strong>" +
             "<br/>Change: <span style='color:" + (chg >= 0 ? "#00b25c" : "#e0344a") + "'>" +
@@ -118,6 +134,7 @@
     function renderChart() {
         var candles = visibleCandles();
         var c = chartColors();
+        var m = marketInfo(state.asset);
 
         if (state.chart) state.chart.destroy();
 
@@ -156,7 +173,7 @@
             data: [
                 {
                     type: "candlestick",
-                    name: MARKETS[state.asset].symbol,
+                    name: m ? m.symbol : state.asset,
                     showInLegend: true,
                     color: c.downColor, risingColor: c.upColor,
                     cornerRadius: 2,
@@ -202,7 +219,7 @@
 
     // ---- balance header reflects last close & daily change ----
     function updateBalance() {
-        var m = MARKETS[state.asset];
+        var m = marketInfo(state.asset);
         var last = state.candles[state.candles.length - 1];
         var prev = state.candles[state.candles.length - 2] || last;
         var close = state.spot ? state.spot.price : last.y[3];
@@ -212,11 +229,14 @@
             : ((close - base) / base) * 100;
         var up = pct >= 0;
 
-        $("#balance_symbol").text(m.symbol);
+        // publish latest price for trading/portfolio modules
+        CoinPrices[state.asset] = close;
+
+        $("#balance_symbol").text(m ? m.symbol : state.asset + "/USD");
         $("#balance_price").text(fmt(close));
         $("#balance_change")
-            .removeClass("text-success text-danger")
-            .addClass(up ? "text-success" : "text-danger")
+            .removeClass("up down")
+            .addClass(up ? "up" : "down")
             .text((up ? "+" : "") + pct.toFixed(2) + "% (" + (up ? "+" : "-") +
                   fmt(Math.abs(close - base)) + ")");
         $("#balance_arrow")
@@ -232,90 +252,6 @@
                 : '<i class="fa fa-flask"></i> DEMO');
     }
 
-    // ---- recent transactions: seeded history + real trades from localStorage ----
-    var TRADES_KEY = "ta-trades";
-
-    function loadTrades() {
-        try { return JSON.parse(localStorage.getItem(TRADES_KEY)) || []; }
-        catch (e) { return []; }
-    }
-
-    window.taRecordTrade = function (side, asset, qty, price) {
-        var trades = loadTrades();
-        trades.unshift({
-            side: side, asset: asset, qty: qty, price: price,
-            usd: qty * price, ts: Date.now()
-        });
-        if (trades.length > 50) trades.length = 50;
-        try { localStorage.setItem(TRADES_KEY, JSON.stringify(trades)); } catch (e) {}
-    };
-
-    function timeAgo(ts) {
-        var s = Math.floor((Date.now() - ts) / 1000);
-        if (s < 60) return "Just now";
-        if (s < 3600) return Math.floor(s / 60) + " min ago";
-        if (s < 86400) return Math.floor(s / 3600) + " h ago";
-        var d = new Date(ts);
-        return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
-               " " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-    }
-
-    function currentPriceNum() {
-        var last = state.candles[state.candles.length - 1];
-        return state.spot ? state.spot.price : (last ? last.y[3] : 0);
-    }
-
-    function renderTransactions() {
-        var sym = state.asset;
-        var txns = [];
-
-        // real user trades for the selected asset
-        loadTrades().forEach(function (t) {
-            if (t.asset !== sym) return;
-            txns.push({
-                type: t.side === "buy" ? "buy" : "out",
-                title: (t.side === "buy" ? "Buy " : "Sell ") + sym,
-                amount: t.side === "buy"
-                    ? "- " + fmt(t.usd)
-                    : "+ " + fmt(t.usd),
-                ago: timeAgo(t.ts),
-                real: true
-            });
-        });
-
-        // seeded demo history to fill the list
-        var demo = [
-            { type: "in",  title: "Received", amount: "+ 0.085 " + sym, ago: "Today 01:55 PM" },
-            { type: "out", title: "Sent",     amount: "- 0.032 " + sym, ago: "Today 03:14 PM" },
-            { type: "buy", title: "Buy " + sym, amount: "$43,120.00",   ago: "Yesterday 09:02 AM" },
-            { type: "in",  title: "Received", amount: "+ 1.065 " + sym, ago: "Sep 24, 2026 05:38 PM" }
-        ];
-        txns = txns.concat(demo);
-
-        var html = "";
-        $.each(txns, function (_, t) {
-            var icon = t.type === "in" ? "fa-long-arrow-down"
-                     : t.type === "out" ? "fa-long-arrow-up"
-                     : "fa-btc";
-            var cls = t.type === "out" ? " amount_sent"
-                    : t.type === "buy" ? " amount_buy" : "";
-            html +=
-                '<div class="row txn-row">' +
-                    '<div class="col-2 justify-content-center align-self-center transactions_thumb">' +
-                        '<i class="fa ' + icon + '"></i>' +
-                    '</div>' +
-                    '<div class="col-6 text-left pl-2 justify-content-center align-self-center">' +
-                        '<span class="transaction_title">' + t.title + '</span>' +
-                        '<span class="transaction_caption">' + t.ago + '</span>' +
-                    '</div>' +
-                    '<div class="col-4 justify-content-center align-self-center text-right transaction_amount' + cls + '">' +
-                        t.amount +
-                    '</div>' +
-                '</div>';
-        });
-        $("#transactions_list").html(html);
-    }
-
     // ---- data loading: try live API, fall back to simulator ----
     function loadSimulated() {
         state.live = false;
@@ -327,11 +263,12 @@
     async function loadLive(daysForOHLC) {
         var seq = ++state.fetchSeq;
         var assetAtRequest = state.asset;
-        var id = MARKETS[assetAtRequest].id;
+        var info = marketInfo(assetAtRequest);
+        if (!info) return false;
         try {
-            var candlesRaw = await fetchOHLC(id, daysForOHLC || 365);
+            var candlesRaw = await fetchOHLC(info.id, daysForOHLC || 365);
             if (seq !== state.fetchSeq) return false;   // superseded by a newer request
-            var spot = await fetchSpot(id).catch(function () { return null; });
+            var spot = await fetchSpot(info.id).catch(function () { return null; });
 
             var candles = candlesRaw.map(function (cd) {
                 return { x: cd.x, y: [cd.o, cd.h, cd.l, cd.c], v: 0 };
@@ -340,7 +277,7 @@
 
             // attach normalized volume buckets if available
             try {
-                var vols = await fetchVolume(id, Math.min(30, Math.ceil(state.days / 30) * 30 || 30));
+                var vols = await fetchVolume(info.id, Math.min(30, Math.ceil(state.days / 30) * 30 || 30));
                 if (seq !== state.fetchSeq) return false;
                 var byDay = {};
                 vols.forEach(function (p) { byDay[Math.floor(p[0] / DAY_MS)] = p[1]; });
@@ -365,10 +302,29 @@
     function renderAll() {
         renderChart();
         updateBalance();
-        renderTransactions();
+        if (window.Trading) Trading.renderAll();
     }
 
-    // ---- live refresh loop ----
+    // ---- background spot poller: keeps ALL symbols priced so the
+    //      limit-order engine can fill orders on coins not on screen ----
+    function startSpotPoller() {
+        setInterval(async function () {
+            var ids = [];
+            var mapIdToSym = {};
+            Object.keys(MARKETS).forEach(function (s) { ids.push(MARKETS[s].id); mapIdToSym[MARKETS[s].id] = s; });
+            Object.keys(extraCoins).forEach(function (s) { ids.push(extraCoins[s].id); mapIdToSym[extraCoins[s].id] = s; });
+            if (!ids.length) return;
+            try {
+                var j = await fetchSpots(ids);
+                Object.keys(j).forEach(function (id) {
+                    var sym = mapIdToSym[id];
+                    if (sym && j[id].usd) CoinPrices[sym] = j[id].usd;
+                });
+            } catch (e) { /* offline — keep last prices */ }
+        }, 15000);
+    }
+
+    // ---- live refresh loop (visible chart's last candle ticks) ----
     function startLiveTick() {
         setInterval(async function () {
             var last = state.candles[state.candles.length - 1];
@@ -376,7 +332,8 @@
 
             if (state.live) {
                 try {
-                    var spot = await fetchSpot(MARKETS[state.asset].id);
+                    var info = marketInfo(state.asset);
+                    var spot = await fetchSpot(info.id);
                     var p = spot.price;
                     state.spot = spot;
                     last.y[3] = p;
@@ -401,6 +358,30 @@
     }
 
     // ---- boot: bind UI handlers IMMEDIATELY (never wait on async fetches) ----
+    function selectAsset(symbol) {
+        if (!marketInfo(symbol)) return;
+        if (state.asset === symbol) return;
+        $(".asset_btn").removeClass("active").attr("aria-selected", "false");
+        $('.asset_btn[data-asset="' + symbol + '"]').addClass("active").attr("aria-selected", "true");
+        state.asset = symbol;
+        var m = marketInfo(symbol);
+        $("#chart_title").text(m.name + " · " + m.symbol);
+        loadSimulated();      // immediate feedback while fetching
+        loadLive(365).then(function (ok) {
+            if (!ok && window.taShowToast) {
+                taShowToast(m.name + " loaded in demo mode (API unavailable)", true);
+            }
+        });
+    }
+
+    function ensurePill(symbol, name) {
+        if ($('.asset_btn[data-asset="' + symbol + '"]').length) return;
+        var $btn = $('<button type="button" class="btn asset_btn" role="tab" aria-selected="false" data-asset="' + symbol + '">' +
+                     '<i class="fa fa-dollar"></i> ' + symbol + '</button>');
+        $btn.insertBefore("#data_source_badge");
+        $btn.on("click", function () { if (!$(this).hasClass("active")) selectAsset(symbol); });
+    }
+
     function bindUI() {
         // timeframe pills
         $(".tf_btn").on("click", function () {
@@ -411,27 +392,18 @@
             updateBalance();
         });
 
-        // asset switcher
+        // asset switcher (static four)
         $(".asset_btn").on("click", function () {
-            if ($(this).hasClass("active")) return;
-            $(".asset_btn").removeClass("active").attr("aria-selected", "false");
-            $(this).addClass("active").attr("aria-selected", "true");
-            state.asset = $(this).data("asset");
-            $("#chart_title").text(MARKETS[state.asset].name + " · " + MARKETS[state.asset].symbol);
-            loadSimulated();      // immediate feedback while fetching
-            loadLive(365).then(function (ok) {
-                if (!ok && window.taShowToast) {
-                    taShowToast(MARKETS[state.asset].name + " loaded in demo mode (API unavailable)", true);
-                }
-            });
+            selectAsset($(this).data("asset"));
         });
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", function () { bindUI(); startLiveTick(); });
+        document.addEventListener("DOMContentLoaded", function () { bindUI(); startLiveTick(); startSpotPoller(); });
     } else {
         bindUI();
         startLiveTick();
+        startSpotPoller();
     }
 
     loadSimulated();          // instant paint, no blank screen
@@ -439,9 +411,21 @@
         if (!ok) console.info("Live API unavailable — running in demo mode.");
     });
 
-    // expose for custom.js: current price + re-render transaction list after trades
-    window.taCurrentPrice = currentPriceNum;
-    window.taRefreshTransactions = renderTransactions;
+    // expose for other modules
+    window.App = {
+        priceOf: function (symbol) {
+            if (symbol === state.asset) {
+                var last = state.candles[state.candles.length - 1];
+                return state.spot ? state.spot.price : (last ? last.y[3] : null);
+            }
+            return CoinPrices[symbol] || null;
+        },
+        addChartCoin: function (id, symbol, name) {
+            extraCoins[symbol] = { id: id, name: name };
+            ensurePill(symbol, name);
+            selectAsset(symbol);
+        }
+    };
 
     // re-render chart when theme flips (exposed for custom.js)
     window.taRefreshChartTheme = renderChart;

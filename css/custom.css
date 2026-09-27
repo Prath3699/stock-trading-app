@@ -491,3 +491,135 @@ div.transactions_list:not(.txn-expanded) .txn-row:nth-child(n+5) { display: none
 .view_all i { margin-left: 2px; }
 .txn-row { animation: txnIn .25s ease; }
 @keyframes txnIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* =========================================================
+   v3 — Tabs, order ticket, market screener, orders, portfolio
+   Palette: black/white + green accents; red only for down.
+   ========================================================= */
+.up { color: var(--app-primary-color) !important; }
+.down { color: var(--app-red) !important; }
+
+/* header equity + buttons */
+.equity_box .name { font-size: 11px; opacity: .6; }
+.equity_value { font-weight: 600; font-size: 14px; }
+
+/* ---------- tabs bar ---------- */
+.tabs_bar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.tab_btn {
+    background: transparent; border: none; color: inherit; opacity: .55;
+    font-family: Poppins, sans-serif; font-size: 13px; font-weight: 500;
+    padding: 8px 12px; white-space: nowrap; border-bottom: 2px solid transparent;
+}
+.tab_btn:hover { opacity: .85; }
+.tab_btn.active { opacity: 1; border-bottom-color: var(--app-primary-color); }
+.pill-count {
+    display: inline-block; min-width: 18px; text-align: center;
+    background: var(--app-primary-color); color: #fff; border-radius: 9px;
+    font-size: 10px; line-height: 18px; padding: 0 5px; margin-left: 2px;
+}
+html.ta-dark .pill-count { color: #000; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ---------- order ticket ---------- */
+#ta_order_ticket { margin-top: 8px; }
+.order_type_bar { display: flex; gap: 6px; margin-bottom: 10px; }
+.ot_btn {
+    flex: 1; border: 1px solid var(--app-border, rgba(0,0,0,.12)); background: transparent;
+    color: inherit; font-family: Poppins, sans-serif; font-size: 13px; font-weight: 500;
+    border-radius: 8px; padding: 7px 0;
+}
+.ot_btn.active { background: var(--app-primary-color); border-color: var(--app-primary-color); color: #fff; }
+html.ta-dark .ot_btn.active { color: #000; }
+.ticket_grid { display: flex; gap: 10px; }
+.ticket_field { flex: 1; display: block; }
+.field_label { font-size: 11px; opacity: .6; display: block; margin-bottom: 3px; }
+.ticket_field input {
+    width: 100%; background: transparent; border: 1px solid var(--app-border, rgba(0,0,0,.15));
+    border-radius: 8px; padding: 9px 12px; color: inherit; font-family: Poppins, sans-serif; font-size: 14px;
+}
+.ticket_field input:focus { outline: none; border-color: var(--app-primary-color); }
+.qty_pct_row { display: flex; gap: 6px; margin: 10px 0; }
+.pct_btn {
+    flex: 1; border: 1px solid var(--app-border, rgba(0,0,0,.12)); background: transparent; color: inherit;
+    border-radius: 8px; font-size: 12px; padding: 5px 0; font-family: Poppins, sans-serif;
+}
+.pct_btn:hover { border-color: var(--app-primary-color); color: var(--app-primary-color); }
+.ticket_summary { font-size: 12px; opacity: .75; margin-bottom: 10px; }
+.action_btns_row { padding: 0 !important; }
+
+/* transactions (new markup) */
+.txn-row-v2 { display: flex; align-items: center; justify-content: space-between; padding: 9px 4px; border-bottom: 1px solid var(--app-border, rgba(0,0,0,.07)); }
+.transaction { display: flex; align-items: center; justify-content: space-between; padding: 9px 4px; border-bottom: 1px solid var(--app-border, rgba(0,0,0,.07)); font-size: 13px; }
+.transaction .tx_side { width: 72px; font-weight: 600; }
+.transaction.buy .tx_side { color: var(--app-primary-color); }
+.transaction.sell .tx_side { color: var(--app-red); }
+.transaction .tx_mid { flex: 1; text-align: left; }
+.tx_date { display: block; font-size: 11px; opacity: .55; }
+.transaction .tx_right { text-align: right; }
+.tx_price { display: block; font-size: 11px; opacity: .55; }
+.empty_note { font-size: 12px; opacity: .55; padding: 12px 4px; text-align: left; }
+
+/* ---------- market table ---------- */
+.mkt_search_wrap { position: relative; margin-bottom: 8px; }
+.mkt_search_wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: .5; font-size: 13px; }
+.mkt_search_wrap input {
+    width: 100%; padding: 9px 36px 9px 32px; border-radius: 10px; font-size: 13px;
+    border: 1px solid var(--app-border, rgba(0,0,0,.15)); background: transparent; color: inherit;
+    font-family: Poppins, sans-serif;
+}
+.mkt_search_wrap input:focus { outline: none; border-color: var(--app-primary-color); }
+.search_close { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: none; background: transparent; color: inherit; opacity: .6; padding: 6px; }
+.mkt_table { margin: 0; font-size: 13px; color: inherit; }
+.mkt_table th { border-bottom: 1px solid var(--app-border, rgba(0,0,0,.1)); font-weight: 500; opacity: .6; font-size: 11px; padding: 6px 8px; }
+.mkt_table td { border-top: 1px solid var(--app-border, rgba(0,0,0,.06)); padding: 9px 8px; vertical-align: middle; }
+.mkt_table tbody tr { cursor: pointer; transition: background .15s; }
+.mkt_table tbody tr:hover { background: rgba(0,178,92,.06); }
+.mkt_table .num, .mkt_table th.num { text-align: right; }
+.sortable { cursor: pointer; user-select: none; }
+.sortable.asc::after { content: " ▲"; font-size: 8px; }
+.sortable.desc::after { content: " ▼"; font-size: 8px; }
+.mkt_sym { opacity: .5; font-size: 11px; }
+.coin_img { width: 18px; height: 18px; border-radius: 50%; margin-right: 4px; object-fit: cover; }
+.star_btn { background: none; border: none; color: inherit; padding: 2px 6px; font-size: 14px; }
+.star_btn .fa-star { color: var(--app-primary-color); }
+
+/* ---------- search overlay ---------- */
+#search_overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1080;
+    display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh;
+}
+#search_overlay[hidden] { display: none; }
+.search_panel { width: min(480px, 92vw); background: var(--app-card-bg, #fff); border-radius: 14px; padding: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+html.ta-dark .search_panel { background: #111; border: 1px solid rgba(255,255,255,.08); }
+.search_results { max-height: 46vh; overflow-y: auto; margin-top: 6px; }
+.search_row { padding: 10px 8px; border-bottom: 1px solid var(--app-border, rgba(0,0,0,.06)); cursor: pointer; font-size: 13px; }
+.search_row:hover { background: rgba(0,178,92,.07); }
+
+/* ---------- orders tab ---------- */
+.orders_list { display: block; }
+.order_row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--app-border, rgba(0,0,0,.07)); font-size: 13px; }
+.order_row.hist { font-size: 12px; }
+.ord_side { font-weight: 600; font-size: 11px; padding: 2px 7px; border-radius: 5px; border: 1px solid currentColor; }
+.ord_side.up { color: var(--app-primary-color); }
+.ord_side.down { color: var(--app-red); }
+.ord_meta { font-size: 11px; opacity: .7; }
+.ord_time { font-size: 11px; opacity: .5; white-space: nowrap; }
+.cancel_btn { border: 1px solid var(--app-red); color: var(--app-red); background: transparent; border-radius: 8px; font-size: 11px; padding: 4px 10px; }
+.cancel_btn:hover { background: var(--app-red); color: #fff; }
+
+/* ---------- portfolio tab ---------- */
+.pf_summary { display: flex; gap: 10px; }
+.pf_card { flex: 1; border: 1px solid var(--app-border, rgba(0,0,0,.1)); border-radius: 12px; padding: 12px; }
+.pf_card .name { font-size: 11px; opacity: .6; margin-bottom: 4px; }
+.pf_value { font-size: 15px; font-weight: 600; }
+.holding_row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--app-border, rgba(0,0,0,.07)); font-size: 13px; }
+.holding_row.clickable { cursor: pointer; transition: background .15s; }
+.holding_row.clickable:hover { background: rgba(0,178,92,.06); }
+.reset_btn { border: 1px dashed var(--app-border, rgba(0,0,0,.25)); background: transparent; color: inherit; opacity: .7; border-radius: 10px; font-size: 12px; padding: 9px 0; font-family: Poppins, sans-serif; }
+.reset_btn:hover { opacity: 1; border-color: var(--app-red); color: var(--app-red); }
+
+@media (max-width: 576px) {
+    .pf_summary { flex-direction: column; }
+    .ticket_grid { flex-direction: column; }
+}
