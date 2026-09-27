@@ -16,7 +16,7 @@
 body
 {
   font-family: 'Poppins', sans-serif;
-  background: #f2f4f3;
+  background: #2b2e31;
 }
 
 :root{
@@ -262,8 +262,8 @@ body {
    Wide two-column workspace instead of a narrow phone card.
    ========================================================= */
 @media only screen and (min-width: 992px) {
-  body { background: #eef1ef; }
-  html.ta-dark body { background: #050505; }
+  body { background: #2b2e31; }
+  html.ta-dark body { background: #1f2224; }
 
   #ta_app {
     width: min(1240px, calc(100% - 48px));
@@ -493,14 +493,14 @@ html.ta-dark #ta_toast { color: #000; }
   --chip-bg: #eef2f0;
   --hover-bg: rgba(0,0,0,0.03);
 }
-html.ta-dark body { background: #000; }
+html.ta-dark body { background: #1f2224; }
 html.ta-dark {
-  --app-bg-color: #0a0a0a;
-  --app-primary-color: #00e07a;        /* brighter green on black */
+  --app-bg-color: #26292c;
+  --app-primary-color: #00e07a;        /* brighter green on dark bg */
   --app-text-dark-color: rgba(255, 255, 255, 0.92);
   --app-text-light-color: rgba(255, 255, 255, 0.55);
-  --chip-bg: #1a1a1a;
-  --hover-bg: rgba(255,255,255,0.05);
+  --chip-bg: #313538;
+  --hover-bg: rgba(255,255,255,0.06);
 }
 html.ta-dark #ta_app {
   box-shadow: 0 0 0 1px rgba(255,255,255,0.08),
@@ -699,7 +699,7 @@ html.ta-dark .ot_btn.active { color: #000; }
 }
 #search_overlay[hidden] { display: none; }
 .search_panel { width: min(480px, 92vw); background: var(--app-card-bg, #fff); border-radius: 14px; padding: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
-html.ta-dark .search_panel { background: #111; border: 1px solid rgba(255,255,255,.08); }
+html.ta-dark .search_panel { background: #26292c; border: 1px solid rgba(255,255,255,.08); }
 .search_results { max-height: 46vh; overflow-y: auto; margin-top: 6px; }
 .search_row { padding: 10px 8px; border-bottom: 1px solid var(--app-border, rgba(0,0,0,.06)); cursor: pointer; font-size: 13px; }
 .search_row:hover { background: rgba(0,178,92,.07); }

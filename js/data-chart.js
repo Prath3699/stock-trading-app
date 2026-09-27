@@ -85,7 +85,7 @@
         var dark = document.documentElement.classList.contains("ta-dark");
         return {
             labelFontColor: dark ? "#9a9a9a" : "#8a8a8a",
-            tooltipBg: dark ? "#161616" : "#ffffff",
+            tooltipBg: dark ? "#313538" : "#ffffff",
             tooltipFont: dark ? "#f0f0f0" : "rgba(0,0,0,0.85)",
             upColor: dark ? "#00e07a" : "#00b25c",
             downColor: dark ? "#ff4757" : "#e0344a",
