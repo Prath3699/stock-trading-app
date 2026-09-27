@@ -26,6 +26,7 @@ body
   --app-red: #ff4757;                  /* chart down color */
   --app-text-dark-color: rgba(0, 0, 0, 0.85);
   --app-text-light-color: rgba(0, 0, 0, 0.55);
+  --frame-border: rgba(0, 0, 0, 0.14);   /* screen frame border (light) */
 }
 
 #ta_app
@@ -238,6 +239,49 @@ body {
   transition: background-color 0.3s ease;
 }
 
+/* =========================================================
+   SCREEN FRAME — a border across the entire viewport with
+   an inner "screen" area (like a trading terminal bezel).
+   All app content + taskbar live INSIDE this frame, so
+   nothing ever spills outside it.
+   ========================================================= */
+#ta_frame {
+  position: fixed;
+  inset: 8px;
+  z-index: 0;
+  border: 2px solid var(--frame-border);
+  border-radius: 16px;
+  pointer-events: none;           /* clicks pass through to content */
+}
+
+/* Desktop / tablet: reserve the frame's space so every element fits inside */
+@media only screen and (min-width: 721px) {
+  html, body { height: 100%; overflow: hidden; }
+  body { padding: 10px; box-sizing: border-box; }
+  #taskbar {
+    left: 10px; right: 10px; bottom: 10px; top: auto;
+    height: 64px;
+    border: 1px solid var(--frame-border);
+    border-radius: 14px;
+    padding-bottom: 0;
+  }
+  #ta_app {
+    height: calc(100% - 86px);     /* viewport minus frame gap minus taskbar */
+    overflow-y: auto;              /* tall content scrolls INSIDE the frame */
+    overflow-x: hidden;
+    border-radius: 14px;
+    scrollbar-width: thin;
+  }
+  #ta_toast { bottom: 86px; left: 10px; right: 10px; margin: 0 auto; max-width: 420px; }
+}
+
+/* Mobile: frame hugs the edges, content stays within its padding */
+@media only screen and (max-width: 720px) {
+  #ta_frame { inset: 5px; border-width: 1.5px; border-radius: 12px; }
+  #taskbar { left: 5px; right: 5px; bottom: 5px; border-radius: 12px; }
+  #ta_app { padding-left: 16px !important; padding-right: 16px !important; }
+}
+
 /* Robust centering that never clips tall content:
    page scrolls naturally on desktop; panel scrolls in-page on mobile. */
 #ta_app {
@@ -262,15 +306,15 @@ body {
   body { background: #2b2e31; }
   html.ta-dark body { background: #1f2224; }
 
-  /* Full-screen edge-to-edge terminal: no width cap, no side gaps */
+  /* Full-screen terminal inside the screen frame (height/scroll set by #ta_frame rules) */
   #ta_app {
     width: 100%;
     max-width: none;
-    padding: 0 clamp(16px, 2.5vw, 40px) 40px;
+    padding: 0 clamp(16px, 2.5vw, 40px) 32px;
     margin: 0 auto;
-    border-radius: 0;
+    border-radius: 14px;
     box-shadow: none;
-    min-height: 100dvh;
+    min-height: 0;
   }
 
   /* header scales up */
@@ -355,9 +399,11 @@ body {
     max-height: none;
     overflow: visible;     /* page itself scrolls instead of the panel */
     border-radius: 0;
-    padding: 0 14px calc(96px + env(safe-area-inset-bottom, 0px));
+    padding: 0 16px calc(96px + env(safe-area-inset-bottom, 0px));
     box-shadow: none;
   }
+  /* sticky tab bar sits inside the frame border on mobile */
+  .tabs_bar { left: 5px; right: 5px; }
   #chartContainer { height: 240px !important; }
   .name, .caption { word-break: break-word; }
 }
@@ -498,10 +544,10 @@ html.ta-dark {
   --app-text-light-color: rgba(255, 255, 255, 0.55);
   --chip-bg: #313538;
   --hover-bg: rgba(255,255,255,0.06);
+  --frame-border: rgba(255, 255, 255, 0.16); /* screen frame border (dark) */
 }
 html.ta-dark #ta_app {
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.08),
-              60px 70px 40px -55px rgba(0,0,0,0.8);
+  box-shadow: 60px 70px 40px -55px rgba(0,0,0,0.8);
 }
 html.ta-dark #ta_body_chart > div:after { background-color: var(--app-bg-color); }
 html.ta-dark #ta_body_transactions .body_title span { background-color: var(--app-bg-color); }
@@ -711,12 +757,12 @@ html.ta-dark .tb_btn.tb_trade i { background: #00e07a; color: #000; box-shadow: 
 .tb_btn.tb_trade:hover i { transform: scale(1.07); }
 .tb_btn.tb_trade:active i { transform: scale(.95); }
 
-/* Keep page content clear of the fixed bar */
-body { padding-bottom: 84px; }
-#ta_toast { bottom: 78px; z-index: 1060; }
-@media only screen and (min-width: 992px) {
-  #ta_app { padding-bottom: 90px !important; }
+/* Keep page content clear of the fixed bar (mobile only; desktop uses
+   the framed layout where #ta_app scrolls inside the border) */
+@media only screen and (max-width: 720px) {
+  body { padding-bottom: 84px; }
 }
+#ta_toast { bottom: 78px; z-index: 1060; }
 
 /* ---------- order ticket ---------- */
 #ta_order_ticket { margin-top: 8px; }
