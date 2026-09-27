@@ -52,9 +52,8 @@
             if (!p) return toast("No price yet — try again in a second", false);
             var db = Store.get();
             var qty;
-            // BUY uses cash, SELL uses holdings
-            if ($("#btn_buy").hasClass("armed") || true) { /* placeholder */ }
-            qty = lastSide === "SELL"
+            // BUY sizes against cash, SELL sizes against holdings
+            qty = _side === "SELL"
                 ? (db.holdings[symbol] || 0) * pct
                 : (db.cash * pct) / p;
             $("#ord_qty").val(fmtQty(qty));
@@ -63,10 +62,6 @@
 
         $("#btn_buy").on("click", function () { submit("BUY"); });
         $("#btn_sell").on("click", function () { submit("SELL"); });
-
-        var lastSide = "BUY"; // used by % buttons; flips on last clicked side
-        $("#btn_buy").on("mousedown touchstart", function () { lastSide = "BUY"; });
-        $("#btn_sell").on("mousedown touchstart", function () { lastSide = "SELL"; });
     }
 
     function currentSymbol() {
@@ -112,15 +107,14 @@
 
     // ================= limit engine =================
     // Every tick of the chart loop we check open orders against latest prices.
-    var trackedSymbols = {};
     setInterval(function () {
         var map = {};
         ["BTC", "ETH", "SOL", "DOGE"].forEach(function (s) {
             var p = spot(s); if (p) map[s] = p;
         });
-        Object.keys(trackedSymbols).forEach(function (id) {
-            var p = window.CoinPrices && CoinPrices[id];
-            if (p) map[trackedSymbols[id]] = p;
+        Store.get().orders.forEach(function (o) {
+            var p = window.CoinPrices && CoinPrices[o.symbol];
+            if (p) map[o.symbol] = p;
         });
         var fills = Store.checkLimitFills(map);
         fills.forEach(function (f) {
