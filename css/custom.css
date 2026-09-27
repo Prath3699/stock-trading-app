@@ -257,21 +257,39 @@ body {
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-@media only screen and (max-width: 600px) {
-  html, body { height: 100%; overflow: hidden; }
+/* ---------- Mobile: full-width, naturally scrolling app frame ---------- */
+@media only screen and (max-width: 720px) {
+  html, body { height: auto; min-height: 100dvh; overflow-x: hidden; overflow-y: visible; }
   #ta_app {
     margin: 0 auto;
     width: 100%;
     max-width: 100%;
-    height: 100vh;
-    max-height: 100vh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    height: auto;          /* grows with content — nothing gets clipped */
+    max-height: none;
+    overflow: visible;     /* page itself scrolls instead of the panel */
     border-radius: 0;
-    scrollbar-width: thin;
+    padding: 0 14px calc(96px + env(safe-area-inset-bottom, 0px));
+    box-shadow: none;
   }
-  #ta_app::-webkit-scrollbar { width: 4px; }
-  #ta_app::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+  #chartContainer { height: 240px !important; }
+  .name, .caption { word-break: break-word; }
+}
+
+@media only screen and (max-width: 480px) {
+  #chartContainer { height: 210px !important; }
+  .price-big { font-size: 26px; }
+}
+
+/* Sticky tab bar on mobile so navigation is always reachable */
+@media only screen and (max-width: 720px) {
+  .tabs_bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--app-bg-color);
+    padding: 8px 0 6px;
+    margin-bottom: 4px;
+  }
 }
 
 /* ---------- Timeframe selector ---------- */
