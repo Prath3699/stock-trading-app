@@ -37,4 +37,10 @@ $(function () {
     }
     window.taShowToast = showToast;
     window.toast = showToast;
+
+    // ---------- Brand click -> go Home ----------
+    $("#brand_home").on("click", function (e) {
+        e.preventDefault();
+        if (window.Trading) Trading.switchTab("home");
+    });
 });

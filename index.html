@@ -29,14 +29,15 @@
 
                 <div class="col-12 d-flex justify-content-between align-items-center">
                     <div class="brand_block">
-                        <a href="#" class="brand" aria-label="Candela home">
+                        <a href="#" class="brand" id="brand_home" aria-label="Candela home">
                             <span class="brand_mark">◆</span><span class="brand_name">CANDELA</span>
                         </a>
-                        <div class="name mt-1">
-                            <span id="balance_symbol">BTC/USD</span> Price
+                        <!-- Header price block: hidden on Home, shown on Trade tab -->
+                        <div class="name mt-1 d-none" id="hdr_price_name">
+                            <span id="balance_symbol">AAPL/USD</span> Price
                         </div>
-                        <div class="caption">
-                            <span id="balance_price" class="price-big">$42,000</span>
+                        <div class="caption d-none" id="hdr_price_caption">
+                            <span id="balance_price" class="price-big">$228.00</span>
                             <i id="balance_arrow" class="fa fa-caret-up up mr-1 ml-2"></i>
                             <span id="balance_change" class="up">+7.62% (+$900)</span>
                         </div>
@@ -59,7 +60,7 @@
             <!-- End Section Header -->
 
             <!-- Start Section Asset Switcher -->
-            <section id="ta_assets" class="row">
+            <section id="ta_assets" class="row d-none">
                 <div class="col-12 px-0 d-flex asset-bar" role="tablist" aria-label="Select asset">
                     <button type="button" class="btn asset_btn active" data-asset="BTC" role="tab" aria-selected="true"><i class="fa fa-bitcoin"></i> BTC</button>
                     <button type="button" class="btn asset_btn" data-asset="ETH" role="tab" aria-selected="false"><i class="fa fa-ethereum"></i> ETH</button>
@@ -72,8 +73,31 @@
 
             <!-- End Tabs (top bar removed — see bottom taskbar) -->
 
+            <!-- Start Tab: Home -->
+            <div class="tab-pane active" id="tab_home">
+                <section class="row home_sec">
+                    <div class="col-12 px-0">
+                        <div class="body_title text-left"><i class="fa fa-line-chart up mr-1"></i>Top performing · 24h</div>
+                        <div class="home_cards" id="home_gainers"></div>
+                    </div>
+                </section>
+                <section class="row home_sec">
+                    <div class="col-12 px-0">
+                        <div class="body_title text-left"><i class="fa fa-arrow-down down mr-1"></i>Biggest decliners · 24h</div>
+                        <div class="home_cards" id="home_losers"></div>
+                    </div>
+                </section>
+                <section class="row home_sec">
+                    <div class="col-12 px-0">
+                        <div class="body_title text-left"><i class="fa fa-history mr-1"></i>Recently viewed</div>
+                        <div class="recent_strip" id="home_recent"></div>
+                    </div>
+                </section>
+            </div>
+            <!-- End Tab: Home -->
+
             <!-- Start Tab: Chart + Trade -->
-            <div class="tab-pane active" id="tab_chart">
+            <div class="tab-pane" id="tab_chart">
               <div class="chart_layout">
                 <div class="chart_col">
 
@@ -243,7 +267,7 @@
 
         <!-- Start Bottom Taskbar -->
         <nav id="taskbar" aria-label="Main navigation">
-            <button class="tb_btn active" data-tab="chart" aria-label="Home / Chart">
+            <button class="tb_btn" data-tab="home" aria-label="Home">
                 <i class="fa fa-home"></i><span>Home</span>
             </button>
             <button class="tb_btn" data-tab="market" aria-label="Market screener">
@@ -269,6 +293,7 @@
         <script src="js/data-chart.js" type="text/javascript"></script>
         <script src="js/trading.js" type="text/javascript"></script>
         <script src="js/market.js" type="text/javascript"></script>
+        <script src="js/home.js" type="text/javascript"></script>
         <script src="js/custom.js" type="text/javascript"></script>
     </body>
 </html>

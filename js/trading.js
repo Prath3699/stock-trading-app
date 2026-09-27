@@ -202,6 +202,15 @@
         $('.tb_btn[data-tab="' + name + '"], .tab_btn[data-tab="' + name + '"]').addClass("active");
         $(".tab-pane").removeClass("active");
         $("#tab_" + name).addClass("active");
+        // Header: show asset price + switcher only on the Trade (chart) tab; Home stays clean
+        if (name === "chart") {
+            $("#hdr_price_name, #hdr_price_caption").removeClass("d-none");
+            $("#ta_assets").removeClass("d-none");
+        } else {
+            $("#hdr_price_name, #hdr_price_caption").addClass("d-none");
+            $("#ta_assets").addClass("d-none");
+        }
+        $(document).trigger("candela:tab", [name]);
         window.scrollTo({ top: 0, behavior: "smooth" });
         if (name === "portfolio") renderPortfolio();
         if (name === "orders") renderOrders();

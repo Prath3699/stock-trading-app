@@ -13,7 +13,7 @@
 
     // ---- state ----
     var state = {
-        asset: "BTC",
+        asset: "AAPL",
         days: 365,
         candles: [],       // [{x: Date, y:[o,h,l,c], v: relVolume}]
         live: false,       // true when using real API data
@@ -33,6 +33,11 @@
         return x ? { id: x.id, symbol: symbol + "/USD", name: x.name || symbol, icon: "fa-dollar", color: "#999" } : null;
     }
 
+    // true when a symbol should be priced from the US-stock feed (Stooq)
+    function isStockSymbol(symbol) {
+        return !!(MARKETS[symbol] || STOCKS.some(function (s) { return s.symbol === symbol; }));
+    }
+
     // ---- deterministic PRNG so the demo looks the same on reload ----
     function mulberry32(seed) {
         return function () {
@@ -43,8 +48,8 @@
         };
     }
 
-    var SEEDS = { BTC: 20260926, ETH: 150903, SOL: 771001, DOGE: 420420 };
-    var STARTS = { BTC: 42000, ETH: 2300, SOL: 98, DOGE: 0.082 };
+    var SEEDS = { AAPL: 20260926, MSFT: 150903, GOOGL: 771001, AMZN: 420420, TSLA: 90210, NVDA: 1337, META: 555 };
+    var STARTS = { AAPL: 228, MSFT: 415, GOOGL: 172, AMZN: 185, TSLA: 245, NVDA: 122, META: 565 };
 
     // ---- generate daily OHLC candles ending "today" (fallback) ----
     function generateCandles(asset, days) {
@@ -262,11 +267,37 @@
         renderAll();
     }
 
+    // ---- real US-stock data via Stooq (daily OHLC) ----
+    async function loadStockLive(days) {
+        var seq = ++state.fetchSeq;
+        var assetAtRequest = state.asset;
+        try {
+            var candles = await cached("stock:" + assetAtRequest + ":" + (days || 365), 300000, 60000, function () {
+                return fetchStockDaily(assetAtRequest, days || 365);
+            });
+            if (seq !== state.fetchSeq || state.asset !== assetAtRequest) return false;
+            state.candles = candles;
+            var last = candles[candles.length - 1];
+            var prev = candles.length > 1 ? candles[candles.length - 2] : null;
+            state.spot = {
+                price: last.y[3],
+                change24h: prev ? ((last.y[3] - prev.y[3]) / prev.y[3]) * 100 : 0
+            };
+            state.live = true;
+            CoinPrices[assetAtRequest] = last.y[3];
+            renderAll();
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     async function loadLive(daysForOHLC) {
         var seq = ++state.fetchSeq;
         var assetAtRequest = state.asset;
         var info = marketInfo(assetAtRequest);
         if (!info) return false;
+        if (isStockSymbol(assetAtRequest)) return loadStockLive(daysForOHLC);
         try {
             var candlesRaw = await fetchOHLC(info.id, daysForOHLC || 365);
             if (seq !== state.fetchSeq) return false;   // superseded by a newer request
@@ -314,7 +345,9 @@
             var ids = [];
             var mapIdToSym = {};
             Object.keys(MARKETS).forEach(function (s) { ids.push(MARKETS[s].id); mapIdToSym[MARKETS[s].id] = s; });
-            Object.keys(extraCoins).forEach(function (s) { ids.push(extraCoins[s].id); mapIdToSym[extraCoins[s].id] = s; });
+            Object.keys(extraCoins).forEach(function (s) {
+                if (extraCoins[s].id) { ids.push(extraCoins[s].id); mapIdToSym[extraCoins[s].id] = s; }
+            });
             if (!ids.length) return;
             try {
                 var j = await fetchSpots(ids);
@@ -332,7 +365,12 @@
             var last = state.candles[state.candles.length - 1];
             if (!last) return;
 
-            if (state.live) {
+            if (state.live && isStockSymbol(state.asset)) {
+                try {                                   // stocks: re-pull the daily series (cached 5 min)
+                    await loadStockLive(state.days || 365);
+                    return;
+                } catch (e) { /* keep last data */ }
+            } else if (state.live) {
                 try {
                     var info = marketInfo(state.asset);
                     var spot = await fetchSpot(info.id);
@@ -360,14 +398,15 @@
     }
 
     // ---- boot: bind UI handlers IMMEDIATELY (never wait on async fetches) ----
-    function selectAsset(symbol) {
+    function selectAsset(symbol, force) {
         if (!marketInfo(symbol)) return;
-        if (state.asset === symbol) return;
+        if (state.asset === symbol && !force) return;
         $(".asset_btn").removeClass("active").attr("aria-selected", "false");
         $('.asset_btn[data-asset="' + symbol + '"]').addClass("active").attr("aria-selected", "true");
         state.asset = symbol;
         var m = marketInfo(symbol);
         $("#chart_title").text(m.name + " · " + m.symbol);
+        if (window.Store) Store.trackRecent({ symbol: symbol, id: m.id, name: m.name });   // Home → recently viewed
         loadSimulated();      // immediate feedback while fetching
         loadLive(365).then(function (ok) {
             if (!ok && window.taShowToast) {
@@ -378,8 +417,9 @@
 
     function ensurePill(symbol, name) {
         if ($('.asset_btn[data-asset="' + symbol + '"]').length) return;
+        var isStock = !!(MARKETS[symbol] || STOCKS.some(function (s) { return s.symbol === symbol; }));
         var $btn = $('<button type="button" class="btn asset_btn" role="tab" aria-selected="false" data-asset="' + symbol + '">' +
-                     '<i class="fa fa-dollar"></i> ' + symbol + '</button>');
+                     '<i class="fa fa-' + (isStock ? "line-chart" : "dollar") + '"></i> ' + symbol + '</button>');
         $btn.insertBefore("#data_source_badge");
         $btn.on("click", function () { if (!$(this).hasClass("active")) selectAsset(symbol); });
     }
@@ -423,9 +463,30 @@
             return CoinPrices[symbol] || null;
         },
         addChartCoin: function (id, symbol, name) {
+            if (BANNED_IDS.has(id)) {                 // fake "stock" tokens on CoinGecko — route to real stock feed
+                this.addChartStock(symbol, name);
+                return;
+            }
             extraCoins[symbol] = { id: id, name: name };
             ensurePill(symbol, name);
             selectAsset(symbol);
+        },
+        addChartStock: function (symbol, name) {      // US stock from the Stooq feed
+            if (!MARKETS[symbol]) extraCoins[symbol] = { id: null, name: name || symbol, stock: true };
+            ensurePill(symbol, name);
+            selectAsset(symbol);
+        },
+        openTicker: function (symbol, id, name) {    // used by the Home screen rows
+            if (!symbol) return;
+            if (MARKETS[symbol] || STOCKS.some(function (s) { return s.symbol === symbol; })) {
+                if (!$('.asset_btn[data-asset="' + symbol + '"]').length) this.addChartStock(symbol, name || (MARKETS[symbol] && MARKETS[symbol].name));
+                else selectAsset(symbol, true);      // already a pill — refresh + re-track
+            } else if ($('.asset_btn[data-asset="' + symbol + '"]').length) {
+                $('.asset_btn[data-asset="' + symbol + '"]').trigger("click");
+            } else {
+                this.addChartCoin(id, symbol, name || symbol);
+            }
+            if (window.Trading) Trading.switchTab("chart");
         }
     };
 

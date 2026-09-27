@@ -1,5 +1,2 @@
-server.log
-tunnel.log
-node_modules/
-package.json
-package-lock.json
+# Logs
+*.log

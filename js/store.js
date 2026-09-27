@@ -18,7 +18,8 @@
         avgCost: {},                       // { BTC: 43120.55 } average buy price
         orders: [],                        // limit orders: {id, side, symbol, qty, limit, status}
         transactions: [],                  // fills: {id, ts, side, symbol, qty, price, total}
-        watchlist: ["BTC", "ETH", "SOL"],  // symbols shown on Market tab
+        watchlist: ["AAPL", "TSLA", "NVDA"],  // symbols shown on Market tab
+        recent: [],                        // recently viewed tickers (newest first): [{symbol,id,name,ts}]
         seq: 1
     };
 
@@ -63,6 +64,12 @@
         },
 
         // ---- trading ----
+        priceOf: function (symbol) {
+            if (window.App && App.priceOf) { var p = App.priceOf(symbol); if (p) return p; }
+            if (window.CoinPrices && CoinPrices[symbol]) return CoinPrices[symbol];
+            return null;
+        },
+
         marketOrder: function (side, symbol, qty, price) {
             var cost = qty * price;
             if (side === "BUY") {
@@ -107,10 +114,11 @@
 
         // called by the engine whenever a live price crosses a limit
         checkLimitFills: function (priceMap) {
+            priceMap = priceMap || {};
             var filled = [];
             db.orders.forEach(function (o) {
                 if (o.status !== "open") return;
-                var p = priceMap[o.symbol];
+                var p = priceMap[o.symbol] || Store.priceOf(o.symbol);
                 if (!p) return;
                 var hit = o.side === "BUY" ? p <= o.limit : p >= o.limit;
                 if (!hit) return;
@@ -130,6 +138,17 @@
             if (i >= 0) db.watchlist.splice(i, 1); else db.watchlist.push(symbol);
             save();
         },
+
+        // ---- recently viewed tickers (for the Home screen) ----
+        trackRecent: function (entry) {   // entry: {symbol, id, name}
+            if (!entry || !entry.symbol) return;
+            if (!Array.isArray(db.recent)) db.recent = [];
+            db.recent = db.recent.filter(function (r) { return r.symbol !== entry.symbol; });
+            db.recent.unshift({ symbol: entry.symbol, id: entry.id, name: entry.name, ts: today() });
+            db.recent = db.recent.slice(0, 8);
+            save();
+        },
+        recent: function () { return Array.isArray(db.recent) ? db.recent.slice() : []; },
 
         resetAccount: function () {
             db = JSON.parse(JSON.stringify(DEFAULTS));

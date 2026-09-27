@@ -6,13 +6,14 @@
    ========================================================= */
 
 const MARKETS = {
-  BTC: { id: "bitcoin",   symbol: "BTC/USD", name: "Bitcoin",   icon: "fa-bitcoin",  color: "#f7931a" },
-  ETH: { id: "ethereum",  symbol: "ETH/USD", name: "Ethereum",  icon: "fa-ethereum", color: "#627eea" },
-  SOL: { id: "solana",    symbol: "SOL/USD", name: "Solana",    icon: "fa-bolt",     color: "#14f195" },
-  DOGE:{ id: "dogecoin",  symbol: "DOGE/USD",name: "Dogecoin",  icon: "fa-coins",    color: "#c2a633" }
+  AAPL: { id: "apple",       symbol: "AAPL/USD", name: "Apple",            icon: "fa-apple",      color: "#999" },
+  MSFT: { id: "microsoft",   symbol: "MSFT/USD", name: "Microsoft",        icon: "fa-windows",    color: "#999" },
+  GOOGL:{ id: "google",      symbol: "GOOGL/USD",name: "Alphabet (Google)",icon: "fa-google",     color: "#999" },
+  AMZN: { id: "amazon",      symbol: "AMZN/USD", name: "Amazon",           icon: "fa-amazon",     color: "#999" },
+  TSLA: { id: "tesla",       symbol: "TSLA/USD", name: "Tesla",            icon: "fa-car",        color: "#999" },
+  NVDA: { id: "nvidia",      symbol: "NVDA/USD", name: "Nvidia",           icon: "fa-microchip",  color: "#999" },
+  META: { id: "meta-platforms", symbol: "META/USD", name: "Meta Platforms", icon: "fa-facebook",  color: "#999" }
 };
-
-const DAY_MS = 86400000;
 
 // ---- proxy chain (first direct, then public read-only proxies) ----
 const PROXIES = [
@@ -21,6 +22,40 @@ const PROXIES = [
   u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
   u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u)
 ];
+
+// CoinGecko ids that are NOT backed by a real price feed — never display these.
+const BANNED_IDS = new Set(["apple", "microsoft", "google", "amazon", "tesla", "nvidia", "meta-platforms"]);
+
+// ---- US stock universe (real tickers for the Home screen) ----
+const STOCKS = [
+  { symbol: "AAPL",  name: "Apple" },
+  { symbol: "MSFT",  name: "Microsoft" },
+  { symbol: "GOOGL", name: "Alphabet" },
+  { symbol: "AMZN",  name: "Amazon" },
+  { symbol: "TSLA",  name: "Tesla" },
+  { symbol: "NVDA",  name: "Nvidia" },
+  { symbol: "META",  name: "Meta" },
+  { symbol: "JPM",   name: "JPMorgan Chase" },
+  { symbol: "V",     name: "Visa" },
+  { symbol: "NFLX",  name: "Netflix" },
+  { symbol: "AMD",   name: "Advanced Micro Devices" },
+  { symbol: "INTC",  name: "Intel" },
+  { symbol: "DIS",   name: "Disney" },
+  { symbol: "NKE",   name: "Nike" },
+  { symbol: "KO",    name: "Coca-Cola" },
+  { symbol: "PEP",   name: "PepsiCo" }
+];
+
+/**
+ * Daily OHLC candles for a US stock from the deterministic simulator.
+ * (No free, CORS-friendly stock API exists without a key — see README.)
+ */
+async function fetchStockDaily(symbol, days) {
+  throw new Error("stock feed is simulated");   // data-chart.js falls back to simulator
+}
+
+const DAY_MS = 86400000;
+
 
 async function fetchWithTimeout(url, ms = 8000) {
   const ctrl = new AbortController();
@@ -99,10 +134,12 @@ async function fetchVolume(assetId, days) {
   });
 }
 
-/** Batch spot prices for many ids at once (one request). */
+/** Batch spot prices for many ids at once (one request). Banned ids are skipped. */
 async function fetchSpots(ids) {
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(",")}&vs_currencies=usd&include_24hr_change=true`;
-  return cached("spots:" + ids.slice().sort().join(","), 12000, 12000, async () => {
+  const safe = (Array.isArray(ids) ? ids : []).filter(id => !BANNED_IDS.has(id));
+  if (!safe.length) return {};
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${safe.join(",")}&vs_currencies=usd&include_24hr_change=true`;
+  return cached("spots:" + safe.slice().sort().join(","), 12000, 12000, async () => {
     return await cgFetch(url, j => j && Object.keys(j).length);
   });
 }

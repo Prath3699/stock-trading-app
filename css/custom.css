@@ -895,3 +895,54 @@ a.brand:hover .brand_name { color: var(--app-primary-color); }
     .brand_name { font-size: 13px; letter-spacing: 2px; }
     .brand_mark { font-size: 15px; }
 }
+
+/* ================= Home screen (stock movers + recently viewed) ================= */
+.home_sec { margin-bottom: 18px; }
+.home_cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+.home_card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 12px 14px;
+    border: 1px solid var(--app-border, rgba(0,0,0,.1));
+    border-radius: 10px;
+    background: var(--app-card-bg, rgba(0,0,0,.02));
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.home_card:hover {
+    transform: translateY(-2px);
+    border-color: var(--app-primary-color, #00b25c);
+    box-shadow: 0 4px 14px rgba(0,178,92,.12);
+}
+.hc_sym { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.hc_icon { opacity: .55; font-size: 12px; }
+.hc_name { font-size: 11px; opacity: .6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hc_chg { font-size: 13px; font-weight: 600; }
+.recent_strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.recent_chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--app-border, rgba(0,0,0,.12));
+    background: transparent;
+    color: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.recent_chip:hover {
+    border-color: var(--app-primary-color, #00b25c);
+    background: rgba(0,178,92,.08);
+}
+.recent_chip i { opacity: .5; font-size: 11px; }
